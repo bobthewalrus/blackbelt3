@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 import bcrypt, re
+from datetime import *
 
 emailregex = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9.+_-]+\.[a-zA-Z]+$')
 nameregex = re.compile(r'^[a-zA-Z]+$')
@@ -16,26 +17,26 @@ class UserManager(models.Manager):
         pw_hash = bcrypt.hashpw(password, bcrypt.gensalt())
         print pw_hash
 
-        user = self.create(firstname=post['firstname'], lastname = post['lastname'], email=post['email'], pw_hash=pw_hash)
+        user = self.create(name=post['name'], alias = post['alias'], email=post['email'], pw_hash=pw_hash, dob=post['dob'], pokecount=0)
         print user.pw_hash
         return (True, user)
 
     def validate_inputs(self,post):
         email = post['email'].lower()
-        firstname = post['firstname'].lower()
-        lastname = post['lastname'].lower()
+        name = post['name'].lower()
+        alias = post['alias'].lower()
         password = post['password']
         passwordconf = post['passwordconf']
 
         errors=[]
-        if len(firstname) <3 or len(lastname) <3:
+        if len(name) <3 or len(alias) <3:
             errors.append("Names must be longer than 2 characters.")
-        if not nameregex.match(firstname):
+        if not nameregex.match(name):
             errors.append('Names must contain  only letters.')
 
-        if not nameregex.match(lastname):
+        if not nameregex.match(alias):
 
-            errors.append('Last name must contain only letters.')
+            errors.append('Alias must contain only letters.')
         if not emailregex.match(email):
             errors.append('Email is invalid.')
 
@@ -73,10 +74,14 @@ class UserManager(models.Manager):
         return (False, ["Email and password don't match."])
 
 class User(models.Model):
-    firstname = models.CharField(max_length=255)
-    lastname = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    alias = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
     pw_hash = models.CharField(max_length=255)
-
-
+    dob = models.DateField(default=datetime.now())
+    pokecount = models.IntegerField()
     objects = UserManager()
+
+class Poke(models.Model):
+    user = models.ForeignKey(User)
+    pokeid = models.CharField(max_length=45, null=True)

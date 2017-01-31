@@ -6,7 +6,20 @@
   </head>
   <body>
     <h1>Success!</h1>
-    <p> Welcome {{request.session.user.firstname}}! You're logged in!</p>
+    <p> Welcome {{request.session.user.name}}! You're logged in!</p>
+    <p> {{distinctpokecount}} people have poked you!</p>
+    {% for pokers in distinctpokers %}
+    <p>{{pokers.user.name}} poked you 1 time!</p>
+    {% endfor %}
+
+    <br>
+    <p>People you may want to poke: </p>
+    <p>Name ======== Alias ================= Email Address ============== Poke History</p>
+    {% for x in listpokers %}
+    <p>{{x.name}} ====== {{x.alias}} ======== {{x.email}}  ============   {{x.pokecount}} pokes <form action='/addpoke/{{x.id}}' method='POST'>{% csrf_token %} <input type='submit' value='Poke'></form>
+    {% endfor %}
+
+
     <a href='{% url 'logout' %}'>Logout</a>
 
 

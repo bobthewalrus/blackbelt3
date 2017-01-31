@@ -1,7 +1,8 @@
 from django.shortcuts import render, HttpResponse, redirect
-from models import User
+from models import User, Poke
 from django.contrib import messages
 from django.urls import reverse
+from django.db.models import F
 
 # Create your views here.
 
@@ -37,9 +38,10 @@ def login(request, user):
     print "Here at Login"
     request.session['user'] = {
     'id': user.id,
-    'firstname' : user.firstname,
-    'lastname' : user.lastname,
+    'name' : user.name,
+    'alias' : user.alias,
     'email' : user.email,
+    'pokecount' : user.pokecount,
     }
     return redirect('success')
 
@@ -55,7 +57,40 @@ def registervalidate(request):
 def success(request):
     if not 'user' in request.session:
         return redirect('/')
-    return render(request, 'login_registration/success.html')
+    distinctpokecount = Poke.objects.filter(pokeid=request.session['user']['id']).order_by('User__pokecount').values('user').distinct().count()
+    distinctpokers = Poke.objects.filter(pokeid=request.session['user']['id'])
+    pokecount=0
+    for i in distinctpokers:
+        print "top of list"
+        print i.id
+        print i.pokeid
+        print i.user
+        print "bottom of list"
+
+            #  i.user.name == j.user.name
+    allpokers = User.objects.exclude(id=request.session['user']['id'])
+    # pokelist =
+
+
+    context = {
+    "listpokers":allpokers,
+    "distinctpokecount":distinctpokecount,
+    "distinctpokers":distinctpokers
+    }
+
+
+    return render(request, 'login_registration/success.html', context)
+
+def addpoke(request, id):
+    user = User.objects.get(id=request.session['user']['id'])
+    print request.session['user']['id']
+    print id
+    addcount = User.objects.filter(id=id).update(pokecount = F('pokecount')+1)
+    pokecount = User.objects.filter(id=request.session['user']['id']).values('pokecount')
+    addpoke = Poke.objects.create(pokeid=id, user=user)
+
+
+    return redirect('/success')
 
 def logout(request):
     request.session.clear()
